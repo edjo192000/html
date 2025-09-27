@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Productos</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+            background-color: lightblue;
+        }
+
+        h1 {
+            color: blue;
+            text-align: center;
+        }
+
+        h2 {
+            color: darkblue;
+        }
+
+        form {
+            background-color: white;
+            padding: 20px;
+            border: 2px solid blue;
+        }
+
+        input, textarea {
+            width: 300px;
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid gray;
+        }
+
+        button {
+            background-color: blue;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: darkblue;
+        }
+
+        .btn-borrar {
+            background-color: red;
+        }
+
+        .btn-borrar:hover {
+            background-color: darkred;
+        }
+
+        p {
+            font-size: 16px;
+            margin: 10px;
+        }
+
+        .lista-productos {
+            background-color: white;
+            padding: 15px;
+            border: 2px solid blue;
+            margin: 20px 0;
+        }
+
+        .producto-item {
+            background-color: lightgray;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid gray;
+        }
+
+        hr {
+            border: 1px solid gray;
+            margin: 20px 0;
+        }
+
+        .navegacion {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .oculto {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<h1>Sistema de Gestión de Productos</h1>
+
+<div class="navegacion">
+    <button type="button" onclick="mostrarFormulario()">Agregar Producto</button>
+    <button type="button" onclick="mostrarLista()">Ver Lista de Productos</button>
+    <button type="button" onclick="borrarTodo()" class="btn-borrar">Borrar Todo</button>
+</div>
+
+<!-- Formulario para ingresar datos del producto -->
+<div id="seccion-formulario">
+    <h2>Agregar Nuevo Producto</h2>
+    <form id="formulario-producto">
+        <label for="nombre">Nombre del Producto:</label><br>
+        <input type="text" id="nombre" name="nombre" required><br><br>
+
+        <label for="descripcion">Descripción:</label><br>
+        <textarea id="descripcion" name="descripcion" rows="4" cols="50" required></textarea><br><br>
+
+        <label for="precio">Precio:</label><br>
+        <input type="text" id="precio" name="precio" required><br><br>
+
+        <button type="button" onclick="guardarProducto()">Guardar Producto</button>
+    </form>
+</div>
+
+<!-- Lista de productos -->
+<div id="seccion-lista" class="oculto">
+    <h2>Lista de Productos Guardados</h2>
+
+    <div id="contenido-lista">
+        <p id="mensaje-vacio">No hay productos guardados todavía.</p>
+        <div class="lista-productos oculto" id="lista-productos">
+            <p id="total-productos"><strong>Total de productos:</strong> 0</p>
+            <div id="productos-container"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Array para almacenar los productos
+    let productos = [];
+
+    // Función para generar ID único
+    function generarId() {
+        return Date.now().toString() + Math.random().toString(36).substr(2, 5);
+    }
+
+    // Función para mostrar el formulario
+    function mostrarFormulario() {
+        document.getElementById('seccion-formulario').classList.remove('oculto');
+        document.getElementById('seccion-lista').classList.add('oculto');
+    }
+
+    // Función para mostrar la lista
+    function mostrarLista() {
+        document.getElementById('seccion-formulario').classList.add('oculto');
+        document.getElementById('seccion-lista').classList.remove('oculto');
+        actualizarLista();
+    }
+
+    // Función para guardar producto
+    function guardarProducto() {
+        // Obtener valores del formulario
+        const nombre = document.getElementById('nombre').value.trim();
+        const descripcion = document.getElementById('descripcion').value.trim();
+        const precio = document.getElementById('precio').value.trim();
+
+        // Validar que no estén vacíos
+        if (nombre === '' || descripcion === '' || precio === '') {
+            alert('Por favor, completa todos los campos');
+            return;
+        }
+
+        // Crear nuevo producto
+        const nuevoProducto = {
+            id: generarId(),
+            nombre: nombre,
+            descripcion: descripcion,
+            precio: precio
+        };
+
+        // Agregar al array
+        productos.push(nuevoProducto);
+
+        // Limpiar formulario
+        document.getElementById('formulario-producto').reset();
+
+        // Mostrar lista
+        mostrarLista();
+
+        alert('Producto guardado exitosamente!');
+    }
+
+    // Función para actualizar la lista
+    function actualizarLista() {
+        const mensajeVacio = document.getElementById('mensaje-vacio');
+        const listaProductos = document.getElementById('lista-productos');
+        const totalProductos = document.getElementById('total-productos');
+        const productosContainer = document.getElementById('productos-container');
+
+        if (productos.length === 0) {
+            mensajeVacio.classList.remove('oculto');
+            listaProductos.classList.add('oculto');
+        } else {
+            mensajeVacio.classList.add('oculto');
+            listaProductos.classList.remove('oculto');
+
+            // Actualizar total
+            totalProductos.innerHTML = '<strong>Total de productos:</strong> ' + productos.length;
+
+            // Limpiar container
+            productosContainer.innerHTML = '';
+
+            // Agregar cada producto
+            productos.forEach(function(producto) {
+                const productoDiv = document.createElement('div');
+                productoDiv.className = 'producto-item';
+                productoDiv.innerHTML = `
+                        <h4>${escapeHtml(producto.nombre)}</h4>
+                        <p><strong>Descripción:</strong> ${escapeHtml(producto.descripcion)}</p>
+                        <p><strong>Precio:</strong> $${escapeHtml(producto.precio)}</p>
+                        <button type="button" class="btn-borrar" onclick="borrarProducto('${producto.id}')">Borrar</button>
+                    `;
+                productosContainer.appendChild(productoDiv);
+            });
+        }
+    }
+
+    // Función para borrar producto
+    function borrarProducto(id) {
+        if (confirm('¿Estás seguro de borrar este producto?')) {
+            // Encontrar índice del producto
+            const indice = productos.findIndex(producto => producto.id === id);
+
+            if (indice !== -1) {
+                // Eliminar del array
+                productos.splice(indice, 1);
+
+                // Actualizar lista
+                actualizarLista();
+
+                alert('Producto borrado exitosamente!');
+            }
+        }
+    }
+
+    // Función para borrar todos los productos
+    function borrarTodo() {
+        if (productos.length === 0) {
+            alert('No hay productos para borrar');
+            return;
+        }
+
+        if (confirm('¿Estás seguro de borrar TODOS los productos? Esta acción no se puede deshacer.')) {
+            // Vaciar el array
+            productos = [];
+
+            // Actualizar lista
+            actualizarLista();
+
+            alert('Todos los productos han sido borrados exitosamente!');
+        }
+    }
+
+    // Función para escapar HTML (seguridad)
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    // Inicializar mostrando el formulario
+    document.addEventListener('DOMContentLoaded', function() {
+        mostrarFormulario();
+    });
+</script>
+
+</body>
+</html>
