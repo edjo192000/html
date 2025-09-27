@@ -85,6 +85,70 @@
         .oculto {
             display: none;
         }
+
+        .ventana-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 3px solid;
+            padding: 30px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            z-index: 1000;
+            text-align: center;
+            border-radius: 10px;
+            min-width: 300px;
+        }
+
+        .fondo-oscuro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .ventana-exito {
+            border-color: green;
+        }
+
+        .ventana-error {
+            border-color: red;
+        }
+
+        .ventana-confirmacion {
+            border-color: orange;
+        }
+
+        .btn-cerrar {
+            background-color: green;
+            margin-top: 15px;
+        }
+
+        .btn-cerrar:hover {
+            background-color: darkgreen;
+        }
+
+        .btn-cancelar {
+            background-color: gray;
+            margin-top: 15px;
+        }
+
+        .btn-cancelar:hover {
+            background-color: darkgray;
+        }
+
+        .btn-confirmar {
+            background-color: orange;
+            margin-top: 15px;
+        }
+
+        .btn-confirmar:hover {
+            background-color: darkorange;
+        }
     </style>
 </head>
 <body>
@@ -93,10 +157,9 @@
 <div class="navegacion">
     <button type="button" onclick="mostrarFormulario()">Agregar Producto</button>
     <button type="button" onclick="mostrarLista()">Ver Lista de Productos</button>
-    <button type="button" onclick="borrarTodo()" class="btn-borrar">Borrar Todo</button>
+    <button type="button" onclick="confirmarBorrarTodo()" class="btn-borrar">Borrar Todo</button>
 </div>
 
-<!-- Formulario para ingresar datos del producto -->
 <div id="seccion-formulario">
     <h2>Agregar Nuevo Producto</h2>
     <form id="formulario-producto">
@@ -113,7 +176,6 @@
     </form>
 </div>
 
-<!-- Lista de productos -->
 <div id="seccion-lista" class="oculto">
     <h2>Lista de Productos Guardados</h2>
 
@@ -126,67 +188,108 @@
     </div>
 </div>
 
-<script>
-    // Array para almacenar los productos
-    let productos = [];
+<div id="ventana-exito" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaExito()"></div>
+    <div class="ventana-modal ventana-exito">
+        <h3 style="color: green;">¡Producto Guardado Exitosamente!</h3>
+        <p>El producto ha sido agregado a la lista correctamente.</p>
+        <button type="button" class="btn-cerrar" onclick="cerrarVentanaExito()">Cerrar</button>
+    </div>
+</div>
 
-    // Función para generar ID único
+<div id="ventana-error" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaError()"></div>
+    <div class="ventana-modal ventana-error">
+        <h3 style="color: red;">Error</h3>
+        <p id="mensaje-error">Por favor, completa todos los campos</p>
+        <button type="button" class="btn-cerrar" onclick="cerrarVentanaError()">Cerrar</button>
+    </div>
+</div>
+
+<div id="ventana-confirmacion-borrar" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaConfirmacionBorrar()"></div>
+    <div class="ventana-modal ventana-confirmacion">
+        <h3 style="color: orange;">Confirmar Eliminación</h3>
+        <p>¿Estás seguro de borrar este producto?</p>
+        <button type="button" class="btn-confirmar" onclick="ejecutarBorrarProducto()">Sí, Borrar</button>
+        <button type="button" class="btn-cancelar" onclick="cerrarVentanaConfirmacionBorrar()">Cancelar</button>
+    </div>
+</div>
+
+<div id="ventana-confirmacion-borrar-todo" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaConfirmacionBorrarTodo()"></div>
+    <div class="ventana-modal ventana-confirmacion">
+        <h3 style="color: orange;">Confirmar Eliminación Total</h3>
+        <p>¿Estás seguro de borrar TODOS los productos?<br>Esta acción no se puede deshacer.</p>
+        <button type="button" class="btn-confirmar" onclick="ejecutarBorrarTodo()">Sí, Borrar Todo</button>
+        <button type="button" class="btn-cancelar" onclick="cerrarVentanaConfirmacionBorrarTodo()">Cancelar</button>
+    </div>
+</div>
+
+<div id="ventana-borrado-exito" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaBorradoExito()"></div>
+    <div class="ventana-modal ventana-exito">
+        <h3 style="color: green;">¡Eliminado Exitosamente!</h3>
+        <p id="mensaje-borrado">Producto borrado exitosamente</p>
+        <button type="button" class="btn-cerrar" onclick="cerrarVentanaBorradoExito()">Cerrar</button>
+    </div>
+</div>
+
+<div id="ventana-info" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaInfo()"></div>
+    <div class="ventana-modal ventana-error">
+        <h3 style="color: blue;">Información</h3>
+        <p>No hay productos para borrar</p>
+        <button type="button" class="btn-cerrar" onclick="cerrarVentanaInfo()">Cerrar</button>
+    </div>
+</div>
+
+<script>
+    var productos = [];
+    var idProductoABorrar = null;
+
     function generarId() {
-        return Date.now().toString() + Math.random().toString(36).substr(2, 5);
+        return Date.now().toString();
     }
 
-    // Función para mostrar el formulario
     function mostrarFormulario() {
         document.getElementById('seccion-formulario').classList.remove('oculto');
         document.getElementById('seccion-lista').classList.add('oculto');
     }
 
-    // Función para mostrar la lista
     function mostrarLista() {
         document.getElementById('seccion-formulario').classList.add('oculto');
         document.getElementById('seccion-lista').classList.remove('oculto');
         actualizarLista();
     }
 
-    // Función para guardar producto
     function guardarProducto() {
-        // Obtener valores del formulario
-        const nombre = document.getElementById('nombre').value.trim();
-        const descripcion = document.getElementById('descripcion').value.trim();
-        const precio = document.getElementById('precio').value.trim();
+        var nombre = document.getElementById('nombre').value;
+        var descripcion = document.getElementById('descripcion').value;
+        var precio = document.getElementById('precio').value;
 
-        // Validar que no estén vacíos
         if (nombre === '' || descripcion === '' || precio === '') {
-            alert('Por favor, completa todos los campos');
+            mostrarVentanaError('Por favor, completa todos los campos');
             return;
         }
 
-        // Crear nuevo producto
-        const nuevoProducto = {
+        var nuevoProducto = {
             id: generarId(),
             nombre: nombre,
             descripcion: descripcion,
             precio: precio
         };
 
-        // Agregar al array
         productos.push(nuevoProducto);
-
-        // Limpiar formulario
         document.getElementById('formulario-producto').reset();
-
-        // Mostrar lista
-        mostrarLista();
-
-        alert('Producto guardado exitosamente!');
+        mostrarVentanaExito();
     }
 
-    // Función para actualizar la lista
     function actualizarLista() {
-        const mensajeVacio = document.getElementById('mensaje-vacio');
-        const listaProductos = document.getElementById('lista-productos');
-        const totalProductos = document.getElementById('total-productos');
-        const productosContainer = document.getElementById('productos-container');
+        var mensajeVacio = document.getElementById('mensaje-vacio');
+        var listaProductos = document.getElementById('lista-productos');
+        var totalProductos = document.getElementById('total-productos');
+        var productosContainer = document.getElementById('productos-container');
 
         if (productos.length === 0) {
             mensajeVacio.classList.remove('oculto');
@@ -195,79 +298,106 @@
             mensajeVacio.classList.add('oculto');
             listaProductos.classList.remove('oculto');
 
-            // Actualizar total
             totalProductos.innerHTML = '<strong>Total de productos:</strong> ' + productos.length;
-
-            // Limpiar container
             productosContainer.innerHTML = '';
 
-            // Agregar cada producto
-            productos.forEach(function(producto) {
-                const productoDiv = document.createElement('div');
+            for (var i = 0; i < productos.length; i++) {
+                var producto = productos[i];
+                var productoDiv = document.createElement('div');
                 productoDiv.className = 'producto-item';
-                productoDiv.innerHTML = `
-                        <h4>${escapeHtml(producto.nombre)}</h4>
-                        <p><strong>Descripción:</strong> ${escapeHtml(producto.descripcion)}</p>
-                        <p><strong>Precio:</strong> $${escapeHtml(producto.precio)}</p>
-                        <button type="button" class="btn-borrar" onclick="borrarProducto('${producto.id}')">Borrar</button>
-                    `;
+
+                var html = '<h4>' + producto.nombre + '</h4>';
+                html += '<p><strong>Descripción:</strong> ' + producto.descripcion + '</p>';
+                html += '<p><strong>Precio:</strong> $' + producto.precio + '</p>';
+                html += '<button type="button" class="btn-borrar" onclick="confirmarBorrarProducto(\'' + producto.id + '\')">Borrar</button>';
+
+                productoDiv.innerHTML = html;
                 productosContainer.appendChild(productoDiv);
-            });
-        }
-    }
-
-    // Función para borrar producto
-    function borrarProducto(id) {
-        if (confirm('¿Estás seguro de borrar este producto?')) {
-            // Encontrar índice del producto
-            const indice = productos.findIndex(producto => producto.id === id);
-
-            if (indice !== -1) {
-                // Eliminar del array
-                productos.splice(indice, 1);
-
-                // Actualizar lista
-                actualizarLista();
-
-                alert('Producto borrado exitosamente!');
             }
         }
     }
 
-    // Función para borrar todos los productos
-    function borrarTodo() {
+    function mostrarVentanaExito() {
+        document.getElementById('ventana-exito').classList.remove('oculto');
+    }
+
+    function cerrarVentanaExito() {
+        document.getElementById('ventana-exito').classList.add('oculto');
+        mostrarLista();
+    }
+
+    function mostrarVentanaError(mensaje) {
+        document.getElementById('mensaje-error').textContent = mensaje;
+        document.getElementById('ventana-error').classList.remove('oculto');
+    }
+
+    function cerrarVentanaError() {
+        document.getElementById('ventana-error').classList.add('oculto');
+    }
+
+    function confirmarBorrarProducto(id) {
+        idProductoABorrar = id;
+        document.getElementById('ventana-confirmacion-borrar').classList.remove('oculto');
+    }
+
+    function ejecutarBorrarProducto() {
+        if (idProductoABorrar) {
+            for (var i = 0; i < productos.length; i++) {
+                if (productos[i].id === idProductoABorrar) {
+                    productos.splice(i, 1);
+                    break;
+                }
+            }
+            actualizarLista();
+            cerrarVentanaConfirmacionBorrar();
+            mostrarVentanaBorradoExito('Producto borrado exitosamente');
+        }
+    }
+
+    function cerrarVentanaConfirmacionBorrar() {
+        document.getElementById('ventana-confirmacion-borrar').classList.add('oculto');
+        idProductoABorrar = null;
+    }
+
+    function confirmarBorrarTodo() {
         if (productos.length === 0) {
-            alert('No hay productos para borrar');
+            mostrarVentanaInfo();
             return;
         }
-
-        if (confirm('¿Estás seguro de borrar TODOS los productos? Esta acción no se puede deshacer.')) {
-            // Vaciar el array
-            productos = [];
-
-            // Actualizar lista
-            actualizarLista();
-
-            alert('Todos los productos han sido borrados exitosamente!');
-        }
+        document.getElementById('ventana-confirmacion-borrar-todo').classList.remove('oculto');
     }
 
-    // Función para escapar HTML (seguridad)
-    function escapeHtml(text) {
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
-        };
-        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    function ejecutarBorrarTodo() {
+        productos = [];
+        actualizarLista();
+        cerrarVentanaConfirmacionBorrarTodo();
+        mostrarVentanaBorradoExito('Todos los productos han sido borrados exitosamente');
     }
 
-    // Inicializar mostrando el formulario
-    document.addEventListener('DOMContentLoaded', function() {
+    function cerrarVentanaConfirmacionBorrarTodo() {
+        document.getElementById('ventana-confirmacion-borrar-todo').classList.add('oculto');
+    }
+
+    function mostrarVentanaBorradoExito(mensaje) {
+        document.getElementById('mensaje-borrado').textContent = mensaje;
+        document.getElementById('ventana-borrado-exito').classList.remove('oculto');
+    }
+
+    function cerrarVentanaBorradoExito() {
+        document.getElementById('ventana-borrado-exito').classList.add('oculto');
+    }
+
+    function mostrarVentanaInfo() {
+        document.getElementById('ventana-info').classList.remove('oculto');
+    }
+
+    function cerrarVentanaInfo() {
+        document.getElementById('ventana-info').classList.add('oculto');
+    }
+
+    window.onload = function() {
         mostrarFormulario();
-    });
+    };
 </script>
 
 </body>
