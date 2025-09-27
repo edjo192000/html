@@ -20,8 +20,8 @@ CREATE TABLE productos (
 );
 
 docker run -d \
-  -p 82:80 \
-  -v "/Users/macintosh/development/html:/var/www/html" \
-  --name servidor-php82 \
+  -p 83:80 \
+  -v "/Users/nayelicorona/Documents/UTN/cuatrimestre5/aplicacionesWeb/aplicaciones-web/php/html:/var/www/html" \
+  --name servidor-php83 \
   php:8.1-apache \
   bash -c "docker-php-ext-install mysqli && apache2-foreground"
