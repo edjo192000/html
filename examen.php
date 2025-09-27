@@ -1,6 +1,8 @@
 <?php
+// Inicializar sesión para mantener la lista de productos
 session_start();
 
+// Inicializar array de productos si no existe
 if (!isset($_SESSION['productos'])) {
     $_SESSION['productos'] = array();
 }
@@ -8,8 +10,6 @@ if (!isset($_SESSION['productos'])) {
 // Variables para controlar qué mostrar
 $mostrar_formulario = true;
 $mostrar_lista = false;
-$mostrar_detalle = false;
-$producto_detalle = null;
 
 // Procesar acciones
 if ($_POST) {
@@ -22,8 +22,7 @@ if ($_POST) {
                 'id' => uniqid(),
                 'nombre' => $_POST['nombre'],
                 'descripcion' => $_POST['descripcion'],
-                'precio' => $_POST['precio'],
-                'fecha' => date("Y-m-d H:i:s")
+                'precio' => $_POST['precio']
             );
             $_SESSION['productos'][] = $nuevo_producto;
             $mostrar_formulario = false;
@@ -41,22 +40,11 @@ if ($_POST) {
             $_SESSION['productos'] = array_values($_SESSION['productos']); // Reindexar
             $mostrar_formulario = false;
             $mostrar_lista = true;
-
-        } elseif ($action == 'ver_detalle') {
-            // Ver detalle del producto
-            $id_detalle = $_POST['id'];
-            foreach ($_SESSION['productos'] as $producto) {
-                if ($producto['id'] == $id_detalle) {
-                    $producto_detalle = $producto;
-                    break;
-                }
-            }
-            $mostrar_formulario = false;
-            $mostrar_detalle = true;
         }
     }
 }
 
+// Si viene por GET para ver lista
 if (isset($_GET['ver_lista'])) {
     $mostrar_formulario = false;
     $mostrar_lista = true;
@@ -183,12 +171,13 @@ if (isset($_GET['ver_lista'])) {
         <textarea id="descripcion" name="descripcion" rows="4" cols="50" required></textarea><br><br>
 
         <label for="precio">Precio:</label><br>
-        <input type="number" id="precio" name="precio" step="0.01" min="0" required><br><br>
+        <input type="text" id="precio" name="precio" required><br><br>
 
         <button type="submit">Guardar Producto</button>
     </form>
 
 <?php elseif ($mostrar_lista): ?>
+    <!-- Lista de productos -->
     <h2>Lista de Productos Guardados</h2>
 
     <?php if (count($_SESSION['productos']) == 0): ?>
@@ -200,14 +189,8 @@ if (isset($_GET['ver_lista'])) {
             <?php foreach ($_SESSION['productos'] as $producto): ?>
                 <div class="producto-item">
                     <h4><?php echo htmlspecialchars($producto['nombre']); ?></h4>
+                    <p><strong>Descripción:</strong> <?php echo htmlspecialchars($producto['descripcion']); ?></p>
                     <p><strong>Precio:</strong> $<?php echo htmlspecialchars($producto['precio']); ?></p>
-                    <p><strong>Fecha:</strong> <?php echo $producto['fecha']; ?></p>
-
-                    <form method="POST" style="display: inline;" action="">
-                        <input type="hidden" name="action" value="ver_detalle">
-                        <input type="hidden" name="id" value="<?php echo $producto['id']; ?>">
-                        <button type="submit" class="btn-detalle">Ver Detalle</button>
-                    </form>
 
                     <form method="POST" style="display: inline;" action="">
                         <input type="hidden" name="action" value="borrar">
@@ -218,21 +201,6 @@ if (isset($_GET['ver_lista'])) {
             <?php endforeach; ?>
         </div>
     <?php endif; ?>
-
-<?php elseif ($mostrar_detalle && $producto_detalle): ?>
-
-    <h2>Detalle del Producto</h2>
-
-    <div class="detalle">
-        <h3><?php echo htmlspecialchars($producto_detalle['nombre']); ?></h3>
-        <p><strong>Descripción:</strong> <?php echo htmlspecialchars($producto_detalle['descripcion']); ?></p>
-        <p><strong>Precio:</strong> $<?php echo htmlspecialchars($producto_detalle['precio']); ?></p>
-        <p><strong>Fecha de registro:</strong> <?php echo $producto_detalle['fecha']; ?></p>
-        <p><strong>ID del producto:</strong> <?php echo $producto_detalle['id']; ?></p>
-    </div>
-
-    <br>
-    <a href="?ver_lista=1"><button type="button">Volver a la Lista</button></a>
 
 <?php endif; ?>
 
