@@ -18,3 +18,10 @@ CREATE TABLE productos (
     descripcion TEXT NOT NULL,
     precio VARCHAR(50) NOT NULL
 );
+
+docker run -d \
+  -p 82:80 \
+  -v "/Users/macintosh/development/html:/var/www/html" \
+  --name servidor-php82 \
+  php:8.1-apache \
+  bash -c "docker-php-ext-install mysqli && apache2-foreground"

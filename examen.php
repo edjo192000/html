@@ -1,42 +1,58 @@
 <?php
-// Inicializar sesión para mantener la lista de productos
-session_start();
+// Configuración de la base de datos
+$host = 'host.docker.internal'; // Para conectar desde Docker a localhost
+$port = '3307';
+$dbname = 'aplicaciones_web';
+$username = 'estudiante';
+$password = 'estudiante123';
 
-if (!isset($_SESSION['productos'])) {
-    $_SESSION['productos'] = array();
+// Conexión a MySQL usando MySQLi
+$conexion = mysqli_connect($host, $username, $password, $dbname, $port);
+
+// Verificar conexión
+if (!$conexion) {
+    die("Error de conexión: " . mysqli_connect_error());
 }
+
+// Configurar charset
+mysqli_set_charset($conexion, "utf8");
 
 $mostrar_formulario = true;
 $mostrar_lista = false;
+$mensaje = '';
 
 if ($_POST) {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
 
         if ($action == 'guardar') {
-            // Guardar nuevo producto
-            $nuevo_producto = array(
-                'id' => uniqid(),
-                'nombre' => $_POST['nombre'],
-                'descripcion' => $_POST['descripcion'],
-                'precio' => $_POST['precio']
-            );
-            $_SESSION['productos'][] = $nuevo_producto;
-            $mostrar_formulario = false;
-            $mostrar_lista = true;
+            // Guardar nuevo producto en la base de datos
+            $nombre = mysqli_real_escape_string($conexion, $_POST['nombre']);
+            $descripcion = mysqli_real_escape_string($conexion, $_POST['descripcion']);
+            $precio = mysqli_real_escape_string($conexion, $_POST['precio']);
+
+            $sql = "INSERT INTO productos (nombre, descripcion, precio) VALUES ('$nombre', '$descripcion', '$precio')";
+
+            if (mysqli_query($conexion, $sql)) {
+                $mensaje = "Producto guardado exitosamente";
+                $mostrar_formulario = false;
+                $mostrar_lista = true;
+            } else {
+                $mensaje = "Error al guardar: " . mysqli_error($conexion);
+            }
 
         } elseif ($action == 'borrar') {
-            // Borrar producto
-            $id_borrar = $_POST['id'];
-            foreach ($_SESSION['productos'] as $key => $producto) {
-                if ($producto['id'] == $id_borrar) {
-                    unset($_SESSION['productos'][$key]);
-                    break;
-                }
+            // Borrar producto de la base de datos
+            $id = mysqli_real_escape_string($conexion, $_POST['id']);
+            $sql = "DELETE FROM productos WHERE id = '$id'";
+
+            if (mysqli_query($conexion, $sql)) {
+                $mensaje = "Producto borrado exitosamente";
+                $mostrar_formulario = false;
+                $mostrar_lista = true;
+            } else {
+                $mensaje = "Error al borrar: " . mysqli_error($conexion);
             }
-            $_SESSION['productos'] = array_values($_SESSION['productos']); // Reindexar
-            $mostrar_formulario = false;
-            $mostrar_lista = true;
         }
     }
 }
@@ -44,6 +60,21 @@ if ($_POST) {
 if (isset($_GET['ver_lista'])) {
     $mostrar_formulario = false;
     $mostrar_lista = true;
+}
+
+// Obtener todos los productos de la base de datos
+$productos = array();
+if ($mostrar_lista) {
+    $sql = "SELECT * FROM productos ORDER BY id DESC";
+    $resultado = mysqli_query($conexion, $sql);
+
+    if ($resultado) {
+        while ($fila = mysqli_fetch_assoc($resultado)) {
+            $productos[] = $fila;
+        }
+    } else {
+        $mensaje = "Error al obtener productos: " . mysqli_error($conexion);
+    }
 }
 ?>
 
@@ -102,14 +133,6 @@ if (isset($_GET['ver_lista'])) {
             background-color: darkred;
         }
 
-        .btn-detalle {
-            background-color: green;
-        }
-
-        .btn-detalle:hover {
-            background-color: darkgreen;
-        }
-
         p {
             font-size: 16px;
             margin: 10px;
@@ -129,20 +152,22 @@ if (isset($_GET['ver_lista'])) {
             border: 1px solid gray;
         }
 
-        .detalle {
-            background-color: lightgreen;
-            padding: 15px;
-            border: 2px solid green;
-        }
-
-        hr {
-            border: 1px solid gray;
-            margin: 20px 0;
-        }
-
         .navegacion {
             margin: 20px 0;
             text-align: center;
+        }
+
+        .mensaje {
+            background-color: lightgreen;
+            padding: 10px;
+            border: 1px solid green;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .error {
+            background-color: lightcoral;
+            border-color: red;
         }
     </style>
 </head>
@@ -153,6 +178,12 @@ if (isset($_GET['ver_lista'])) {
     <a href="?"><button type="button">Agregar Producto</button></a>
     <a href="?ver_lista=1"><button type="button">Ver Lista de Productos</button></a>
 </div>
+
+<?php if ($mensaje): ?>
+    <div class="mensaje <?php echo strpos($mensaje, 'Error') !== false ? 'error' : ''; ?>">
+        <?php echo htmlspecialchars($mensaje); ?>
+    </div>
+<?php endif; ?>
 
 <?php if ($mostrar_formulario): ?>
     <h2>Agregar Nuevo Producto</h2>
@@ -174,13 +205,13 @@ if (isset($_GET['ver_lista'])) {
 <?php elseif ($mostrar_lista): ?>
     <h2>Lista de Productos Guardados</h2>
 
-    <?php if (count($_SESSION['productos']) == 0): ?>
+    <?php if (count($productos) == 0): ?>
         <p>No hay productos guardados todavía.</p>
     <?php else: ?>
         <div class="lista-productos">
-            <p><strong>Total de productos:</strong> <?php echo count($_SESSION['productos']); ?></p>
+            <p><strong>Total de productos:</strong> <?php echo count($productos); ?></p>
 
-            <?php foreach ($_SESSION['productos'] as $producto): ?>
+            <?php foreach ($productos as $producto): ?>
                 <div class="producto-item">
                     <h4><?php echo htmlspecialchars($producto['nombre']); ?></h4>
                     <p><strong>Descripción:</strong> <?php echo htmlspecialchars($producto['descripcion']); ?></p>
