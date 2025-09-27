@@ -1,8 +1,6 @@
 <?php
-// Inicializar sesión para mantener la lista de productos
 session_start();
 
-// Inicializar array de productos si no existe
 if (!isset($_SESSION['productos'])) {
     $_SESSION['productos'] = array();
 }
@@ -59,7 +57,6 @@ if ($_POST) {
     }
 }
 
-// Si viene por GET para ver lista
 if (isset($_GET['ver_lista'])) {
     $mostrar_formulario = false;
     $mostrar_lista = true;
@@ -169,7 +166,7 @@ if (isset($_GET['ver_lista'])) {
 <h1>Sistema de Gestión de Productos</h1>
 
 <div class="navegacion">
-    <a href=""><button type="button">Agregar Producto</button></a>
+    <a href="?"><button type="button">Agregar Producto</button></a>
     <a href="?ver_lista=1"><button type="button">Ver Lista de Productos</button></a>
 </div>
 
@@ -192,7 +189,6 @@ if (isset($_GET['ver_lista'])) {
     </form>
 
 <?php elseif ($mostrar_lista): ?>
-    <!-- Lista de productos -->
     <h2>Lista de Productos Guardados</h2>
 
     <?php if (count($_SESSION['productos']) == 0): ?>
@@ -207,13 +203,13 @@ if (isset($_GET['ver_lista'])) {
                     <p><strong>Precio:</strong> $<?php echo htmlspecialchars($producto['precio']); ?></p>
                     <p><strong>Fecha:</strong> <?php echo $producto['fecha']; ?></p>
 
-                    <form method="POST" style="display: inline;">
+                    <form method="POST" style="display: inline;" action="">
                         <input type="hidden" name="action" value="ver_detalle">
                         <input type="hidden" name="id" value="<?php echo $producto['id']; ?>">
                         <button type="submit" class="btn-detalle">Ver Detalle</button>
                     </form>
 
-                    <form method="POST" style="display: inline;">
+                    <form method="POST" style="display: inline;" action="">
                         <input type="hidden" name="action" value="borrar">
                         <input type="hidden" name="id" value="<?php echo $producto['id']; ?>">
                         <button type="submit" class="btn-borrar" onclick="return confirm('¿Estás seguro de borrar este producto?')">Borrar</button>
@@ -224,7 +220,7 @@ if (isset($_GET['ver_lista'])) {
     <?php endif; ?>
 
 <?php elseif ($mostrar_detalle && $producto_detalle): ?>
-    <!-- Detalle del producto -->
+
     <h2>Detalle del Producto</h2>
 
     <div class="detalle">
