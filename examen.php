@@ -2,16 +2,13 @@
 // Inicializar sesión para mantener la lista de productos
 session_start();
 
-// Inicializar array de productos si no existe
 if (!isset($_SESSION['productos'])) {
     $_SESSION['productos'] = array();
 }
 
-// Variables para controlar qué mostrar
 $mostrar_formulario = true;
 $mostrar_lista = false;
 
-// Procesar acciones
 if ($_POST) {
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
@@ -44,7 +41,6 @@ if ($_POST) {
     }
 }
 
-// Si viene por GET para ver lista
 if (isset($_GET['ver_lista'])) {
     $mostrar_formulario = false;
     $mostrar_lista = true;
@@ -159,7 +155,6 @@ if (isset($_GET['ver_lista'])) {
 </div>
 
 <?php if ($mostrar_formulario): ?>
-    <!-- Formulario para ingresar datos del producto -->
     <h2>Agregar Nuevo Producto</h2>
     <form method="POST" action="">
         <input type="hidden" name="action" value="guardar">
@@ -177,7 +172,6 @@ if (isset($_GET['ver_lista'])) {
     </form>
 
 <?php elseif ($mostrar_lista): ?>
-    <!-- Lista de productos -->
     <h2>Lista de Productos Guardados</h2>
 
     <?php if (count($_SESSION['productos']) == 0): ?>
