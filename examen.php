@@ -151,7 +151,7 @@ if (isset($_GET['ver_lista'])) {
     </style>
 </head>
 <body>
-<h1>Sistema de Gestión de Productos</h1>
+<h1>Alta de Productos</h1>
 
 <div class="navegacion">
     <a href="?"><button type="button">Agregar Producto</button></a>
