@@ -1,0 +1,10 @@
+Primero ejecutar esto en la terminal
+
+docker run -d \
+  --name mysql-server \
+  -e MYSQL_ROOT_PASSWORD=root123 \
+  -e MYSQL_DATABASE=aplicaciones_web \
+  -e MYSQL_USER=estudiante \
+  -e MYSQL_PASSWORD=estudiante123 \
+  -p 3306:3306 \
+  mysql:8.0
