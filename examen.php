@@ -19,12 +19,69 @@ if ($_POST) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Productos</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 20px;
+            background-color: lightblue;
+        }
+
+        h1 {
+            color: blue;
+            text-align: center;
+        }
+
+        h2 {
+            color: darkblue;
+        }
+
+        form {
+            background-color: white;
+            padding: 20px;
+            border: 2px solid blue;
+        }
+
+        input, textarea {
+            width: 300px;
+            padding: 5px;
+            margin: 5px;
+            border: 1px solid gray;
+        }
+
+        button {
+            background-color: blue;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            margin: 10px;
+        }
+
+        button:hover {
+            background-color: darkblue;
+        }
+
+        p {
+            font-size: 16px;
+            margin: 10px;
+        }
+
+        .resumen {
+            background-color: lightgreen;
+            padding: 15px;
+            border: 2px solid green;
+        }
+
+        hr {
+            border: 1px solid gray;
+            margin: 20px 0;
+        }
+    </style>
 </head>
 <body>
 <h1>Sistema de Gestión de Productos</h1>
 
 <?php if (!$mostrar_resumen): ?>
-
+    <!-- Formulario para ingresar datos del producto -->
     <h2>Agregar Nuevo Producto</h2>
     <form method="POST" action="">
         <label for="nombre">Nombre del Producto:</label><br>
@@ -40,13 +97,15 @@ if ($_POST) {
     </form>
 
 <?php else: ?>
-
+    <!-- Resumen del producto guardado -->
     <h2>¡Producto Guardado Exitosamente!</h2>
 
-    <h3>Resumen del Producto:</h3>
-    <p><strong>Nombre del Producto:</strong> <?php echo htmlspecialchars($nombre_producto); ?></p>
-    <p><strong>Descripción:</strong> <?php echo htmlspecialchars($descripcion); ?></p>
-    <p><strong>Precio:</strong> $<?php echo htmlspecialchars($precio); ?></p>
+    <div class="resumen">
+        <h3>Resumen del Producto:</h3>
+        <p><strong>Nombre del Producto:</strong> <?php echo htmlspecialchars($nombre_producto); ?></p>
+        <p><strong>Descripción:</strong> <?php echo htmlspecialchars($descripcion); ?></p>
+        <p><strong>Precio:</strong> $<?php echo htmlspecialchars($precio); ?></p>
+    </div>
 
     <hr>
 
