@@ -19,6 +19,8 @@ mysqli_set_charset($conexion, "utf8");
 
 $mostrar_formulario = true;
 $mostrar_lista = false;
+$mostrar_consulta = false;
+$producto_consultado = null;
 $mensaje = '';
 
 if ($_POST) {
@@ -53,6 +55,21 @@ if ($_POST) {
             } else {
                 $mensaje = "Error al borrar: " . mysqli_error($conexion);
             }
+        } elseif ($action == 'consultar') {
+            // Consultar producto específico por ID
+            $id_consulta = mysqli_real_escape_string($conexion, $_POST['id_consulta']);
+            $sql = "SELECT * FROM productos WHERE id = '$id_consulta'";
+            $resultado = mysqli_query($conexion, $sql);
+
+            if ($resultado && mysqli_num_rows($resultado) > 0) {
+                $producto_consultado = mysqli_fetch_assoc($resultado);
+                $mostrar_formulario = false;
+                $mostrar_consulta = true;
+            } else {
+                $mensaje = "Error: No se encontró un producto con el ID especificado";
+                $mostrar_formulario = false;
+                $mostrar_lista = true;
+            }
         }
     }
 }
@@ -60,6 +77,11 @@ if ($_POST) {
 if (isset($_GET['ver_lista'])) {
     $mostrar_formulario = false;
     $mostrar_lista = true;
+}
+
+if (isset($_GET['consultar'])) {
+    $mostrar_formulario = false;
+    $mostrar_consulta = true;
 }
 
 // Obtener todos los productos de la base de datos
@@ -240,6 +262,7 @@ if ($mostrar_lista) {
 <div class="navegacion">
     <a href="?"><button type="button">Agregar Producto</button></a>
     <a href="?ver_lista=1"><button type="button">Ver Lista de Productos</button></a>
+    <a href="?consultar=1"><button type="button">Consultar Producto</button></a>
 </div>
 
 <!-- Ventanas modales -->
@@ -316,6 +339,52 @@ echo $script_mensaje;
         <button type="submit">Guardar Producto</button>
     </form>
 
+<?php elseif ($mostrar_consulta): ?>
+    <h2>Consultar Producto por ID</h2>
+
+    <?php
+    // Obtener todos los IDs disponibles para el combo
+    $sql_ids = "SELECT id, nombre FROM productos ORDER BY id ASC";
+    $resultado_ids = mysqli_query($conexion, $sql_ids);
+    $productos_disponibles = array();
+    if ($resultado_ids) {
+        while ($fila = mysqli_fetch_assoc($resultado_ids)) {
+            $productos_disponibles[] = $fila;
+        }
+    }
+    ?>
+
+    <?php if (count($productos_disponibles) == 0): ?>
+        <p>No hay productos disponibles para consultar.</p>
+        <p><a href="?">Agregar un producto primero</a></p>
+    <?php else: ?>
+        <form method="POST" action="">
+            <input type="hidden" name="action" value="consultar">
+
+            <label for="id_consulta">Seleccionar Producto:</label><br>
+            <select id="id_consulta" name="id_consulta" required style="width: 310px; padding: 5px; margin: 5px; border: 1px solid gray;">
+                <option value="">-- Seleccione un producto --</option>
+                <?php foreach ($productos_disponibles as $prod): ?>
+                    <option value="<?php echo $prod['id']; ?>">
+                        ID: <?php echo $prod['id']; ?> - <?php echo htmlspecialchars($prod['nombre']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select><br><br>
+
+            <button type="submit">Consultar Producto</button>
+        </form>
+
+        <?php if ($producto_consultado): ?>
+            <hr>
+            <h3>Resultado de la Consulta:</h3>
+            <div class="producto-item">
+                <h4><?php echo htmlspecialchars($producto_consultado['nombre']); ?> <small>(ID: <?php echo $producto_consultado['id']; ?>)</small></h4>
+                <p><strong>Descripción:</strong> <?php echo htmlspecialchars($producto_consultado['descripcion']); ?></p>
+                <p><strong>Precio:</strong> $<?php echo htmlspecialchars($producto_consultado['precio']); ?></p>
+            </div>
+        <?php endif; ?>
+    <?php endif; ?>
+
 <?php elseif ($mostrar_lista): ?>
     <h2>Lista de Productos Guardados</h2>
 
@@ -327,7 +396,7 @@ echo $script_mensaje;
 
             <?php foreach ($productos as $producto): ?>
                 <div class="producto-item">
-                    <h4><?php echo htmlspecialchars($producto['nombre']); ?></h4>
+                    <h4><?php echo htmlspecialchars($producto['nombre']); ?> <small>(ID: <?php echo $producto['id']; ?>)</small></h4>
                     <p><strong>Descripción:</strong> <?php echo htmlspecialchars($producto['descripcion']); ?></p>
                     <p><strong>Precio:</strong> $<?php echo htmlspecialchars($producto['precio']); ?></p>
 
