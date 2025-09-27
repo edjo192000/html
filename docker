@@ -6,5 +6,5 @@ docker run -d \
   -e MYSQL_DATABASE=aplicaciones_web \
   -e MYSQL_USER=estudiante \
   -e MYSQL_PASSWORD=estudiante123 \
-  -p 3306:3306 \
+  -p 3307:3306 \
   mysql:8.0
