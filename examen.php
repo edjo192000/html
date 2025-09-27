@@ -169,6 +169,69 @@ if ($mostrar_lista) {
             background-color: lightcoral;
             border-color: red;
         }
+
+        /* Estilos para ventanas modales */
+        .ventana-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 2px solid;
+            padding: 20px;
+            z-index: 1000;
+            text-align: center;
+            min-width: 300px;
+            max-width: 400px;
+        }
+
+        .fondo-oscuro {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .ventana-exito {
+            border-color: green;
+        }
+
+        .ventana-error {
+            border-color: red;
+        }
+
+        .ventana-confirmacion {
+            border-color: orange;
+        }
+
+        .btn-modal {
+            padding: 8px 16px;
+            border: none;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        .btn-cerrar {
+            background-color: green;
+            color: white;
+        }
+
+        .btn-confirmar {
+            background-color: orange;
+            color: white;
+        }
+
+        .btn-cancelar {
+            background-color: gray;
+            color: white;
+        }
+
+        .oculto {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -179,11 +242,62 @@ if ($mostrar_lista) {
     <a href="?ver_lista=1"><button type="button">Ver Lista de Productos</button></a>
 </div>
 
-<?php if ($mensaje): ?>
-    <div class="mensaje <?php echo strpos($mensaje, 'Error') !== false ? 'error' : ''; ?>">
-        <?php echo htmlspecialchars($mensaje); ?>
+<!-- Ventanas modales -->
+<!-- Ventana de éxito -->
+<div id="ventana-exito" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaExito()"></div>
+    <div class="ventana-modal ventana-exito">
+        <h3 style="color: green; margin: 0 0 15px 0;">Operación Exitosa</h3>
+        <p id="mensaje-exito">Producto guardado exitosamente</p>
+        <button type="button" class="btn-modal btn-cerrar" onclick="cerrarVentanaExito()">Cerrar</button>
     </div>
-<?php endif; ?>
+</div>
+
+<!-- Ventana de error -->
+<div id="ventana-error" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaError()"></div>
+    <div class="ventana-modal ventana-error">
+        <h3 style="color: red; margin: 0 0 15px 0;">Error</h3>
+        <p id="mensaje-error">Ha ocurrido un error</p>
+        <button type="button" class="btn-modal btn-cerrar" onclick="cerrarVentanaError()">Cerrar</button>
+    </div>
+</div>
+
+<!-- Ventana de confirmación para borrar -->
+<div id="ventana-confirmacion" class="oculto">
+    <div class="fondo-oscuro" onclick="cerrarVentanaConfirmacion()"></div>
+    <div class="ventana-modal ventana-confirmacion">
+        <h3 style="color: orange; margin: 0 0 15px 0;">Confirmar Acción</h3>
+        <p>¿Estás seguro de que deseas borrar este producto?<br>Esta acción no se puede deshacer.</p>
+        <button type="button" class="btn-modal btn-confirmar" onclick="confirmarBorrado()">Sí, Borrar</button>
+        <button type="button" class="btn-modal btn-cancelar" onclick="cerrarVentanaConfirmacion()">Cancelar</button>
+    </div>
+</div>
+
+<?php
+// JavaScript para mostrar ventanas según el mensaje
+$script_mensaje = '';
+if ($mensaje) {
+    if (strpos($mensaje, 'Error') !== false) {
+        $script_mensaje = "
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('mensaje-error').textContent = '" . addslashes($mensaje) . "';
+            document.getElementById('ventana-error').classList.remove('oculto');
+        });
+        </script>";
+    } else {
+        $script_mensaje = "
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('mensaje-exito').textContent = '" . addslashes($mensaje) . "';
+            document.getElementById('ventana-exito').classList.remove('oculto');
+        });
+        </script>";
+    }
+}
+echo $script_mensaje;
+?>
 
 <?php if ($mostrar_formulario): ?>
     <h2>Agregar Nuevo Producto</h2>
@@ -217,10 +331,10 @@ if ($mostrar_lista) {
                     <p><strong>Descripción:</strong> <?php echo htmlspecialchars($producto['descripcion']); ?></p>
                     <p><strong>Precio:</strong> $<?php echo htmlspecialchars($producto['precio']); ?></p>
 
-                    <form method="POST" style="display: inline;" action="">
+                    <form method="POST" style="display: inline;" action="" onsubmit="return false;">
                         <input type="hidden" name="action" value="borrar">
                         <input type="hidden" name="id" value="<?php echo $producto['id']; ?>">
-                        <button type="submit" class="btn-borrar" onclick="return confirm('¿Estás seguro de borrar este producto?')">Borrar</button>
+                        <button type="button" class="btn-borrar" onclick="mostrarConfirmacionBorrar('<?php echo $producto['id']; ?>')">Borrar</button>
                     </form>
                 </div>
             <?php endforeach; ?>
@@ -230,4 +344,71 @@ if ($mostrar_lista) {
 <?php endif; ?>
 
 </body>
+
+<script>
+    var idProductoABorrar = null;
+
+    // Función para mostrar ventana de éxito
+    function mostrarVentanaExito(mensaje) {
+        document.getElementById('mensaje-exito').textContent = mensaje;
+        document.getElementById('ventana-exito').classList.remove('oculto');
+    }
+
+    // Función para cerrar ventana de éxito
+    function cerrarVentanaExito() {
+        document.getElementById('ventana-exito').classList.add('oculto');
+        if (window.location.search !== '?ver_lista=1') {
+            window.location.href = '?ver_lista=1';
+        }
+    }
+
+    // Función para mostrar ventana de error
+    function mostrarVentanaError(mensaje) {
+        document.getElementById('mensaje-error').textContent = mensaje;
+        document.getElementById('ventana-error').classList.remove('oculto');
+    }
+
+    // Función para cerrar ventana de error
+    function cerrarVentanaError() {
+        document.getElementById('ventana-error').classList.add('oculto');
+    }
+
+    // Función para mostrar confirmación de borrado
+    function mostrarConfirmacionBorrar(id) {
+        idProductoABorrar = id;
+        document.getElementById('ventana-confirmacion').classList.remove('oculto');
+    }
+
+    // Función para cerrar ventana de confirmación
+    function cerrarVentanaConfirmacion() {
+        document.getElementById('ventana-confirmacion').classList.add('oculto');
+        idProductoABorrar = null;
+    }
+
+    // Función para ejecutar el borrado
+    function confirmarBorrado() {
+        if (idProductoABorrar) {
+            // Crear formulario dinámico para enviar la petición
+            var form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '';
+
+            var actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'borrar';
+
+            var idInput = document.createElement('input');
+            idInput.type = 'hidden';
+            idInput.name = 'id';
+            idInput.value = idProductoABorrar;
+
+            form.appendChild(actionInput);
+            form.appendChild(idInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
+
 </html>
